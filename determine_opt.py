@@ -5,6 +5,7 @@ import math
 from enum import Enum
 import time
 from typing import List, Tuple, Optional
+import random
 
 ym_per_pix: float = 1 / 2250
 xm_per_pix: float = 1 / 2250
@@ -12,17 +13,31 @@ ranges: np.ndarray = np.array([160, 320, 480, 640])
 reference_list: List[str] = []
 
 
-class Curvature(Enum):
-    CURVED = 1
-    STRAIGHT = 2
-    UNDETERMINED = 3
-
-
-class Direction(Enum):
-    LEFT = 1
-    RIGHT = 2
-    UNDETERMINED = 3
-
+def polyfit(x, y, degree):
+    n = len(x)
+    
+    # Create the Vandermonde matrix
+    X = [[x[i] ** j for j in range(degree + 1)] for i in range(n)]
+    
+    # Create the Y matrix
+    Y = [[y[i]] for i in range(n)]
+    
+    # Solve the linear system using Gauss-Jordan elimination
+    for i in range(degree + 1):
+        for j in range(i + 1, degree + 1):
+            ratio = X[j][i] / X[i][i]
+            for k in range(degree + 1):
+                X[j][k] -= ratio * X[i][k]
+            Y[j][0] -= ratio * Y[i][0]
+    
+    # Back substitution
+    coefficients = [0] * (degree + 1)
+    for i in range(degree, -1, -1):
+        for j in range(i + 1, degree + 1):
+            Y[i][0] -= X[i][j] * coefficients[j]
+        coefficients[i] = Y[i][0] / X[i][i]
+    
+    return coefficients
 
 def colortogreyImage(original_frame):
     return cv2.cvtColor(original_frame, cv2.COLOR_BGR2GRAY)
@@ -121,17 +136,25 @@ def polynomalFitThree(left_lane_window_coord_list: List[Tuple[float, float]],
         leftlane_y = [y for _, y in left_lane_window_coord_list]
 
         if len(leftlane_x) >= window_number and len(leftlane_y) >= window_number:
-            left_fit = np.polyfit(leftlane_y, leftlane_x, 3)
+            left_fit = polyfit(leftlane_y, leftlane_x, 3)
 
     if right_lane_window_coord_list:
         rightlane_x = [x for x, _ in right_lane_window_coord_list]
         rightlane_y = [y for _, y in right_lane_window_coord_list]
 
         if len(rightlane_x) >= window_number and len(rightlane_y) >= window_number:
-            right_fit = np.polyfit(rightlane_y, rightlane_x, 3)
+            right_fit = polyfit(rightlane_y, rightlane_x, 3)
 
     return right_fit, left_fit
 
+
+def evaluate_polynomial(coefficients: List[float], x: float) -> float:
+    result = 0.0
+    power = len(coefficients) - 1
+    for coeff in coefficients:
+        result += coeff * x**power
+        power -= 1
+    return result
 
 def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                              right_lane_window_coord_list: List[Tuple[int, int]],
@@ -139,8 +162,8 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                              left_fit: np.ndarray,
                              warped: np.ndarray) -> float:
     def calculate_centre_lane_px() -> float:
-        bottom_x_right = np.polyval(right_fit, y_eval)
-        bottom_x_left = np.polyval(left_fit, y_eval)
+        bottom_x_right = evaluate_polynomial(right_fit, y_eval)
+        bottom_x_left = evaluate_polynomial(left_fit, y_eval)
         return bottom_x_left + (bottom_x_right - bottom_x_left) / 2
 
     def calculate_centre_lane_mid_height_px() -> None:
@@ -249,7 +272,7 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                 left_lane = False
 
         calculate_centre_lane_mid_height_px()
-        bottom_x_right = np.polyval(right_fit, y_eval)
+        bottom_x_right = evaluate_polynomial(right_fit, y_eval)
         centre_lane_px: float = bottom_x_right - distance_to_lane
 
     elif len(left_lane_window_coord_list) > window_nr:
@@ -273,7 +296,7 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                 right_lane = False
 
         calculate_centre_lane_mid_height_px_left()
-        bottom_x_left = np.polyval(left_fit, y_eval)
+        bottom_x_left = evaluate_polynomial(left_fit, y_eval)
         centre_lane_px: float = bottom_x_left - distance_to_lane
 
     if centre_lane_px is None:
@@ -284,14 +307,11 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
 
 
 def pipeline():
-    image_directory = "calced/"
+    image_directory = "determine_dir_opt/calced"
     image_files = os.listdir(image_directory)
     total_processing_time = 0.0
 
     png_files = [file for file in image_files if file.endswith('.png')]
-
-    import random
-
     image_paths_doubled = png_files
 
     random.shuffle(image_paths_doubled)
@@ -333,5 +353,4 @@ def pipeline():
 
 if __name__ == '__main__':
     pipeline()
-
     cv2.destroyAllWindows()
