@@ -306,7 +306,7 @@ def pipeline() -> None:
     total_processing_time: float = 0.0
 
     png_files: List[str] = [file for file in image_files if file.endswith('.png')]
-    image_paths_doubled: List[str] = png_files
+    image_paths_doubled: List[str] = png_files * 300
 
     random.shuffle(image_paths_doubled)
     num_images: int = len(image_paths_doubled)
@@ -327,7 +327,7 @@ def pipeline() -> None:
         processing_time: float = end_time - start_time
         total_processing_time += processing_time
 
-        if True:
+        if False:
             # Extract the angle from the filename
             extracted_angle: float = float(image_file[:-4])  # Assuming the angle is at the beginning and the extension is ".png"
 
