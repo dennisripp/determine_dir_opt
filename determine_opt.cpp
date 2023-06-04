@@ -1,18 +1,11 @@
-/* Sample Main*/
-
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <math.h>
-#include <filesystem>
 #include <chrono>
-#include <algorithm>
 #include <string>
-#include <random>
 #include <Eigen/Dense>
 #include <Eigen/QR>
-#include <cmath>
-#include <cassert>
 #include <opencv2/core.hpp>
 
 
@@ -459,10 +452,6 @@ void pipeline() {
 
         float steering_angle = calculate_steering_angle(left_lane_window_coord_list, right_lane_window_coord_list, right_fit, left_fit, warped);
 
-        // std::cout << steering_angle<< std::endl;
-        // std::cout << filename << std::endl;
-        // std::cout << "#############################" << std::endl;
-
         auto end_time = std::chrono::system_clock::now();
         std::chrono::duration<float> duration = end_time - start_time;
         float processingTime = duration.count();
@@ -473,80 +462,12 @@ void pipeline() {
     float imagesPerSecond = 1.0f / averageProcessingTime;
     std::cout << "Average processing time: " << averageProcessingTime << " seconds" << std::endl;
     std::cout << "Images processed per second: " << imagesPerSecond << std::endl;
-
-    // cv::Mat original_frame = cv::imread("/home/dennis/Desktop/VSCode/petra_git/determine_direction_sliding_window/translate/frame.png");
-    // int i = 0;
-    // auto start_time = std::chrono::system_clock::now();
-    // cv::Mat gray_image = colortogreyImage(original_frame);
-    // cv::Mat warped = birdseyeView(gray_image);
-    // cv::Mat cannyLines = detectlaneLines(warped);
-    // cv::Mat dilated_edges = dilatelaneEdges(cannyLines);
-    // std::cout << ++i<< std::endl;
-
-    // auto [left_lane_window_coord_list, right_lane_window_coord_list] = detect_lane_pixels(dilated_edges, warped);
-    // std::cout << ++i << std::endl;
-
-    // auto [right_fit, left_fit] = polynomialFitThree(left_lane_window_coord_list, right_lane_window_coord_list);
-    // std::cout << ++i<< std::endl;
-
-    // float steering_angle = calculate_steering_angle(left_lane_window_coord_list, right_lane_window_coord_list, right_fit, left_fit, warped);
-    // std::cout << ++i<< std::endl;
-
-    // std::cout << steering_angle<< std::endl;
 }
 
 
 
 int main() {
     pipeline();
-
-    // // Beispielbild laden
-    // cv::Mat inputImage = cv::imread("frame.jpg");
-
-    // // Debug-Daten Struktur erstellen
-    // DebugData* debugData  = new DebugData();
-    // cv::Mat imageAfterGRB2Gray;
-    // cv::Mat imageCanny;
-    // cv::Mat imageEdges;
-    // cv::Mat slidingWindow;
-    // Direction direction_lane;
-    // Direction direction_curvature;
-    // Curvature curv;
-    // std::pair<cv::Mat, cv::Mat> poly_coeff;
-    // std::pair<cv::Mat, cv::Mat> poly_coeff_rw;
-
-    // debugData->imageBRG2Gray = &imageAfterGRB2Gray;
-    // debugData->imageCanny = &imageCanny;
-    // debugData->imageEdges = &imageEdges;
-    // debugData->polynomalFit = &poly_coeff;
-    // debugData->slidingWindow = &slidingWindow;
-    // debugData->laneDirection = &direction_lane;
-    // debugData->curveDirection = &direction_curvature;
-    // debugData->laneCurvature = &curv;
-    // debugData->polynomalFit_rw = &poly_coeff_rw;
-
-    // // Winkel berechnen und Debug-Bilder speichern
-    // int angle = processor.calculateAngle(inputImage, debugData);
-
-    // std::cout << "##############################################" << std::endl;
-
-    // // Ergebnisse ausgeben
-    // std::cout << "coeff right fit: " << poly_coeff.first << std::endl;
-    // std::cout << "coeff right rw fit: " << poly_coeff_rw.first << std::endl;
-    // std::cout << "\n\n" << std::endl;
-    // std::cout << "coeff left fit: " << poly_coeff.second << std::endl;
-    // std::cout << "coeff left rw fit: " << poly_coeff_rw.second << std::endl;
-    // std::cout << "\n\n" << std::endl;
-    // std::cout << "Winkel: " << angle << std::endl;    
-    // std::cout << "slope : " << getDirectionString(direction_lane) << std::endl;
-    // std::cout << "curv dir: " << getDirectionString(direction_curvature) << std::endl;
-    // std::cout << "curv: " << getCurvatureString(curv) << std::endl;
-    // cv::imshow("image_after_preprocess.jpg", imageAfterGRB2Gray);
-    // cv::imshow("image_with_sliding_window.jpg", imageCanny);
-    // cv::imshow("image_with_fitted_lines.jpg", imageEdges);
-    // cv::imshow("slidingwindow.jpg", slidingWindow);
-    // cv::waitKey(0);
-
 
     return 0;
 }
