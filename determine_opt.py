@@ -11,6 +11,7 @@ xm_per_pix: float = 1 / 2250
 ranges: np.ndarray = np.array([160, 320, 480, 640])
 reference_list: List[str] = []
 
+
 class Curvature(Enum):
     CURVED = 1
     STRAIGHT = 2
@@ -47,7 +48,8 @@ def dilatelaneEdges(image_canny):
     return cv2.dilate(np.copy(image_canny), kernel, iterations=1)
 
 
-def detect_lane_pixels(dilated_edges: np.ndarray, warped: np.ndarray) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]:
+def detect_lane_pixels(dilated_edges: np.ndarray, warped: np.ndarray) -> Tuple[
+    List[Tuple[int, int]], List[Tuple[int, int]]]:
     binary_image = np.copy(dilated_edges)
     nwindows: int = 20
     window_length: int = 70
@@ -86,7 +88,8 @@ def detect_lane_pixels(dilated_edges: np.ndarray, warped: np.ndarray) -> Tuple[L
             win_xleft_low = leftx_current - window_length
             win_xleft_high = leftx_current + window_length
 
-            left_mask = (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)
+            left_mask = (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (
+                    nonzerox < win_xleft_high)
 
             if left_mask.any():
                 leftx_current = np.int32(np.mean(nonzerox[left_mask]))
@@ -97,7 +100,8 @@ def detect_lane_pixels(dilated_edges: np.ndarray, warped: np.ndarray) -> Tuple[L
             win_xright_low = rightx_current - window_length
             win_xright_high = rightx_current + window_length
 
-            right_mask = (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)
+            right_mask = (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (
+                    nonzerox < win_xright_high)
 
             if right_mask.any():
                 rightx_current = np.int32(np.mean(nonzerox[right_mask]))
@@ -128,12 +132,12 @@ def polynomalFitThree(left_lane_window_coord_list: List[Tuple[float, float]],
 
     return right_fit, left_fit
 
+
 def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                              right_lane_window_coord_list: List[Tuple[int, int]],
                              right_fit: np.ndarray,
                              left_fit: np.ndarray,
                              warped: np.ndarray) -> float:
-
     def calculate_centre_lane_px() -> float:
         bottom_x_right = np.polyval(right_fit, y_eval)
         bottom_x_left = np.polyval(left_fit, y_eval)
@@ -151,10 +155,12 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
 
         if left_lane:
             perpendicular_line_x = x_coord_right + (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_right + (perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+            perpendicular_line_y = y_coord_right + (
+                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
         else:
             perpendicular_line_x = x_coord_right - (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_right - (perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+            perpendicular_line_y = y_coord_right - (
+                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
 
         centre_lane_mid_height_px = perpendicular_line_x
         centre_lane_mid_height_py = perpendicular_line_y
@@ -171,10 +177,12 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
 
         if right_lane:
             perpendicular_line_x = x_coord_left - (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_left - (perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+            perpendicular_line_y = y_coord_left - (
+                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
         else:
             perpendicular_line_x = x_coord_left + (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_left + (perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+            perpendicular_line_y = y_coord_left + (
+                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
 
         centre_lane_mid_height_px = perpendicular_line_x
         centre_lane_mid_height_py = perpendicular_line_y
@@ -274,6 +282,7 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
     car_position: float = calculate_car_position()
     return calculate_theta_in_deg()
 
+
 def pipeline():
     image_directory = "calced/"
     image_files = os.listdir(image_directory)
@@ -307,7 +316,8 @@ def pipeline():
 
         if True:
             # Extract the angle from the filename
-            extracted_angle = float(image_file[:-4])  # Assuming the angle is at the beginning and the extension is ".png"
+            extracted_angle = float(
+                image_file[:-4])  # Assuming the angle is at the beginning and the extension is ".png"
 
             # Compare the extracted angle with the calculated angle with tolerance
             if abs(extracted_angle - steering_angle) <= 1.0:
