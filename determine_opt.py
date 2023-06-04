@@ -1,11 +1,11 @@
 import numpy as np
 import cv2
-import os
 import math
 from enum import Enum
-import time
 from typing import List, Tuple, Optional
 import random
+import time
+import os
 
 ym_per_pix: float = 1 / 2250
 xm_per_pix: float = 1 / 2250
@@ -13,11 +13,11 @@ ranges: np.ndarray = np.array([160, 320, 480, 640])
 reference_list: List[str] = []
 
 
-def colortogreyImage(original_frame):
+def colortogreyImage(original_frame: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(original_frame, cv2.COLOR_BGR2GRAY)
 
 
-def birdseyeView(image_gray):
+def birdseyeView(image_gray: np.ndarray) -> np.ndarray:
     width, height = image_gray.shape[1], image_gray.shape[0]
     source = np.float32([[(20, 440), (100, 180), (590, 180), (640, 470)]])
     destination = np.float32([[0, 480], [0, 0], [640, 0], [640, 480]])
@@ -26,17 +26,18 @@ def birdseyeView(image_gray):
     return cv2.warpPerspective(image_gray, matrix, (width, height), flags=cv2.INTER_LINEAR)
 
 
-def detectlaneLines(warped):
+def detectlaneLines(warped: np.ndarray) -> np.ndarray:
     threshold_low, threshold_high = 100, 200
     image_blurred = cv2.GaussianBlur(np.copy(warped), (7, 7), 0)
     return cv2.Canny(image_blurred, threshold_low, threshold_high)
 
 
-def dilatelaneEdges(image_canny):
+def dilatelaneEdges(image_canny: np.ndarray) -> np.ndarray:
     kernel = np.ones((5, 5), np.uint8)
     return cv2.dilate(np.copy(image_canny), kernel, iterations=1)
 
-def polyfit(x, y, degree):
+
+def polyfit(x: List[float], y: List[float], degree: int) -> List[float]:
     n = len(x)
     
     # Create the Vandermonde matrix
@@ -299,38 +300,36 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
     return calculate_theta_in_deg(centre_lane_mid_height_px, centre_lane_mid_height_py, car_position, y_eval)
 
 
-def pipeline():
-    image_directory = "determine_dir_opt/calced"
-    image_files = os.listdir(image_directory)
-    total_processing_time = 0.0
+def pipeline() -> None:
+    image_directory: str = "determine_dir_opt/calced"
+    image_files: List[str] = os.listdir(image_directory)
+    total_processing_time: float = 0.0
 
-    png_files = [file for file in image_files if file.endswith('.png')]
-    image_paths_doubled = png_files
+    png_files: List[str] = [file for file in image_files if file.endswith('.png')]
+    image_paths_doubled: List[str] = png_files
 
     random.shuffle(image_paths_doubled)
-    num_images = len(image_paths_doubled)
+    num_images: int = len(image_paths_doubled)
 
     for image_file in image_paths_doubled:
-        image_path = os.path.join(image_directory, image_file)
-        original_frame = cv2.imread(image_path)
+        image_path: str = os.path.join(image_directory, image_file)
+        original_frame: np.ndarray = cv2.imread(image_path)
 
-        start_time = time.time()
-        gray_image = colortogreyImage(original_frame)
-        warped = birdseyeView(gray_image)
-        cannyLines = detectlaneLines(warped)
-        dilated_edges = dilatelaneEdges(cannyLines)
+        start_time: float = time.time()
+        gray_image: np.ndarray = colortogreyImage(original_frame)
+        warped: np.ndarray = birdseyeView(gray_image)
+        cannyLines: np.ndarray = detectlaneLines(warped)
+        dilated_edges: np.ndarray = dilatelaneEdges(cannyLines)
         left_lane_window_coord_list, right_lane_window_coord_list = detect_lane_pixels(dilated_edges, warped)
         right_fit, left_fit = polynomalFitThree(left_lane_window_coord_list, right_lane_window_coord_list)
-        steering_angle = calculate_steering_angle(left_lane_window_coord_list, right_lane_window_coord_list, right_fit,
-                                                  left_fit, warped)
-        end_time = time.time()
-        processing_time = end_time - start_time
+        steering_angle: float = calculate_steering_angle(left_lane_window_coord_list, right_lane_window_coord_list, right_fit, left_fit, warped)
+        end_time: float = time.time()
+        processing_time: float = end_time - start_time
         total_processing_time += processing_time
 
         if True:
             # Extract the angle from the filename
-            extracted_angle = float(
-                image_file[:-4])  # Assuming the angle is at the beginning and the extension is ".png"
+            extracted_angle: float = float(image_file[:-4])  # Assuming the angle is at the beginning and the extension is ".png"
 
             # Compare the extracted angle with the calculated angle with tolerance
             if abs(extracted_angle - steering_angle) <= 1.0:
@@ -338,8 +337,8 @@ def pipeline():
             else:
                 print(f"Angles do not match. Given: {extracted_angle} vs calced: {steering_angle}")
 
-    avg_processing_time = total_processing_time / num_images
-    images_per_second = 1. / avg_processing_time
+    avg_processing_time: float = total_processing_time / num_images
+    images_per_second: float = 1. / avg_processing_time
     print(f"Processed {num_images} images in an average of {avg_processing_time:.5f} seconds.")
     print(f"Images per second: {images_per_second:.2f}")
 
