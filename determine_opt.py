@@ -155,14 +155,6 @@ def evaluate_polynomial(coefficients: List[float], x: float) -> float:
         power -= 1
     return result
 
-def evaluate_polynomial(coefficients: List[float], x: float) -> float:
-    result = 0.0
-    power = len(coefficients) - 1
-    for coeff in coefficients:
-        result += coeff * x**power
-        power -= 1
-    return result
-
 def calculate_centre_lane_px(left_fit: np.ndarray, right_fit: np.ndarray, y_eval: int) -> float:
     bottom_x_right = evaluate_polynomial(right_fit, y_eval)
     bottom_x_left = evaluate_polynomial(left_fit, y_eval)
