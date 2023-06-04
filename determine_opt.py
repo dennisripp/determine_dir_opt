@@ -13,6 +13,29 @@ ranges: np.ndarray = np.array([160, 320, 480, 640])
 reference_list: List[str] = []
 
 
+def colortogreyImage(original_frame):
+    return cv2.cvtColor(original_frame, cv2.COLOR_BGR2GRAY)
+
+
+def birdseyeView(image_gray):
+    width, height = image_gray.shape[1], image_gray.shape[0]
+    source = np.float32([[(20, 440), (100, 180), (590, 180), (640, 470)]])
+    destination = np.float32([[0, 480], [0, 0], [640, 0], [640, 480]])
+
+    matrix = cv2.getPerspectiveTransform(source, destination)
+    return cv2.warpPerspective(image_gray, matrix, (width, height), flags=cv2.INTER_LINEAR)
+
+
+def detectlaneLines(warped):
+    threshold_low, threshold_high = 100, 200
+    image_blurred = cv2.GaussianBlur(np.copy(warped), (7, 7), 0)
+    return cv2.Canny(image_blurred, threshold_low, threshold_high)
+
+
+def dilatelaneEdges(image_canny):
+    kernel = np.ones((5, 5), np.uint8)
+    return cv2.dilate(np.copy(image_canny), kernel, iterations=1)
+
 def polyfit(x, y, degree):
     n = len(x)
     
@@ -38,30 +61,6 @@ def polyfit(x, y, degree):
         coefficients[i] = Y[i][0] / X[i][i]
     
     return coefficients
-
-def colortogreyImage(original_frame):
-    return cv2.cvtColor(original_frame, cv2.COLOR_BGR2GRAY)
-
-
-def birdseyeView(image_gray):
-    width, height = image_gray.shape[1], image_gray.shape[0]
-    source = np.float32([[(20, 440), (100, 180), (590, 180), (640, 470)]])
-    destination = np.float32([[0, 480], [0, 0], [640, 0], [640, 480]])
-
-    matrix = cv2.getPerspectiveTransform(source, destination)
-    return cv2.warpPerspective(image_gray, matrix, (width, height), flags=cv2.INTER_LINEAR)
-
-
-def detectlaneLines(warped):
-    threshold_low, threshold_high = 100, 200
-    image_blurred = cv2.GaussianBlur(np.copy(warped), (7, 7), 0)
-    return cv2.Canny(image_blurred, threshold_low, threshold_high)
-
-
-def dilatelaneEdges(image_canny):
-    kernel = np.ones((5, 5), np.uint8)
-    return cv2.dilate(np.copy(image_canny), kernel, iterations=1)
-
 
 def detect_lane_pixels(dilated_edges: np.ndarray, warped: np.ndarray) -> Tuple[
     List[Tuple[int, int]], List[Tuple[int, int]]]:
@@ -156,77 +155,79 @@ def evaluate_polynomial(coefficients: List[float], x: float) -> float:
         power -= 1
     return result
 
+def evaluate_polynomial(coefficients: List[float], x: float) -> float:
+    result = 0.0
+    power = len(coefficients) - 1
+    for coeff in coefficients:
+        result += coeff * x**power
+        power -= 1
+    return result
+
+def calculate_centre_lane_px(left_fit: np.ndarray, right_fit: np.ndarray, y_eval: int) -> float:
+    bottom_x_right = evaluate_polynomial(right_fit, y_eval)
+    bottom_x_left = evaluate_polynomial(left_fit, y_eval)
+    return bottom_x_left + (bottom_x_right - bottom_x_left) / 2
+
+def calculate_centre_lane_mid_height_px_right(right_lane_window_coord_list: List[Tuple[int, int]], window_height: int, distance: int, left_lane: bool) -> Tuple[float, float]:
+    x_coord_right2, y_coord_right2 = right_lane_window_coord_list[window_height]
+    x_coord_right, y_coord_right = right_lane_window_coord_list[window_height - 2]
+    lane_slope = (y_coord_right2 - x_coord_right) / (x_coord_right2 - x_coord_right)
+    if lane_slope == 0:
+        lane_slope = 0.0001
+    perpendicular_slope = -1 / lane_slope
+
+    if left_lane:
+        perpendicular_line_x = x_coord_right + (distance / np.sqrt(1 + perpendicular_slope ** 2))
+        perpendicular_line_y = y_coord_right + (
+                perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+    else:
+        perpendicular_line_x = x_coord_right - (distance / np.sqrt(1 + perpendicular_slope ** 2))
+        perpendicular_line_y = y_coord_right - (
+                perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+
+    return perpendicular_line_x, perpendicular_line_y
+
+def calculate_centre_lane_mid_height_px_left(left_lane_window_coord_list: List[Tuple[int, int]], window_height: int, distance: int, right_lane: bool) -> Tuple[float, float]:
+    x_coord_left, y_coord_left = left_lane_window_coord_list[window_height]
+    x_coord_left2, y_coord_left2 = left_lane_window_coord_list[window_height - 2]
+    lane_slope = (y_coord_left2 - y_coord_left) / (x_coord_left2 - x_coord_left)
+    if lane_slope == 0:
+        lane_slope = 0.0001
+    perpendicular_slope = -1 / lane_slope
+
+    if right_lane:
+        perpendicular_line_x = x_coord_left - (distance / np.sqrt(1 + perpendicular_slope ** 2))
+        perpendicular_line_y = y_coord_left - (
+                perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+    else:
+        perpendicular_line_x = x_coord_left + (distance / np.sqrt(1 + perpendicular_slope ** 2))
+        perpendicular_line_y = y_coord_left + (
+                perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
+
+    return perpendicular_line_x, perpendicular_line_y
+
+def calculate_car_position(image_middle: float, centre_lane_px: float) -> float:
+    centre_offset_pixels = image_middle - centre_lane_px
+    return centre_offset_pixels + centre_lane_px
+
+def calculate_theta_in_deg(centre_lane_mid_height_px: float, centre_lane_mid_height_py: float, car_position: float, y_eval: int) -> float:
+    delta_x = np.abs(centre_lane_mid_height_px - car_position)
+    delta_y = y_eval - centre_lane_mid_height_py
+
+    if centre_lane_mid_height_px < car_position:
+        theta_rad = math.atan2(delta_y, delta_x) - np.pi / 2
+        return theta_rad * 180 / np.pi
+    elif centre_lane_mid_height_px > car_position:
+        theta_rad = math.atan2(-delta_y, delta_x) + np.pi / 2
+        return theta_rad * 180 / np.pi
+    else:
+        return 0
+
 def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
                              right_lane_window_coord_list: List[Tuple[int, int]],
                              right_fit: np.ndarray,
                              left_fit: np.ndarray,
                              warped: np.ndarray) -> float:
-    def calculate_centre_lane_px() -> float:
-        bottom_x_right = evaluate_polynomial(right_fit, y_eval)
-        bottom_x_left = evaluate_polynomial(left_fit, y_eval)
-        return bottom_x_left + (bottom_x_right - bottom_x_left) / 2
-
-    def calculate_centre_lane_mid_height_px() -> None:
-        nonlocal centre_lane_mid_height_px, centre_lane_mid_height_py
-
-        x_coord_right2, y_coord_right2 = right_lane_window_coord_list[window_height]
-        x_coord_right, y_coord_right = right_lane_window_coord_list[window_height - 2]
-        lane_slope = (y_coord_right2 - x_coord_right) / (x_coord_right2 - x_coord_right)
-        if lane_slope == 0:
-            lane_slope = 0.0001
-        perpendicular_slope = -1 / lane_slope
-
-        if left_lane:
-            perpendicular_line_x = x_coord_right + (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_right + (
-                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
-        else:
-            perpendicular_line_x = x_coord_right - (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_right - (
-                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
-
-        centre_lane_mid_height_px = perpendicular_line_x
-        centre_lane_mid_height_py = perpendicular_line_y
-
-    def calculate_centre_lane_mid_height_px_left() -> None:
-        nonlocal centre_lane_mid_height_px, centre_lane_mid_height_py
-
-        x_coord_left, y_coord_left = left_lane_window_coord_list[window_height]
-        x_coord_left2, y_coord_left2 = left_lane_window_coord_list[window_height - 2]
-        lane_slope = (y_coord_left2 - y_coord_left) / (x_coord_left2 - x_coord_left)
-        if lane_slope == 0:
-            lane_slope = 0.0001
-        perpendicular_slope = -1 / lane_slope
-
-        if right_lane:
-            perpendicular_line_x = x_coord_left - (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_left - (
-                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
-        else:
-            perpendicular_line_x = x_coord_left + (distance / np.sqrt(1 + perpendicular_slope ** 2))
-            perpendicular_line_y = y_coord_left + (
-                    perpendicular_slope * (distance / np.sqrt(1 + perpendicular_slope ** 2)))
-
-        centre_lane_mid_height_px = perpendicular_line_x
-        centre_lane_mid_height_py = perpendicular_line_y
-
-    def calculate_car_position() -> float:
-        centre_offset_pixels = image_middle - centre_lane_px
-        return centre_offset_pixels + centre_lane_px
-
-    def calculate_theta_in_deg() -> float:
-        delta_x = np.abs(centre_lane_mid_height_px - car_position)
-        delta_y = y_eval - centre_lane_mid_height_py
-
-        if centre_lane_mid_height_px < car_position:
-            theta_rad = math.atan2(delta_y, delta_x) - np.pi / 2
-            return theta_rad * 180 / np.pi
-        elif centre_lane_mid_height_px > car_position:
-            theta_rad = math.atan2(-delta_y, delta_x) + np.pi / 2
-            return theta_rad * 180 / np.pi
-        else:
-            return 0
-
     window_nr: int = 12
     window_height: int = 11
     distance_to_lane: int = 290
@@ -249,7 +250,7 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
         x_coord_left, y_coord_left = left_lane_window_coord_list[window_height]
         centre_lane_mid_height_py = y_coord_right
         centre_lane_mid_height_px = x_coord_left + (x_coord_right - x_coord_left) / 2
-        centre_lane_px: float = calculate_centre_lane_px()
+        centre_lane_px: float = calculate_centre_lane_px(left_fit, right_fit, y_eval)
 
     elif len(right_lane_window_coord_list) > window_nr:
         left_lane = False
@@ -271,7 +272,7 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
             elif reference_list[-3] == "l2" and reference_list[-2] == "l2" and reference_list[-1] == "r2":
                 left_lane = False
 
-        calculate_centre_lane_mid_height_px()
+        centre_lane_mid_height_px, centre_lane_mid_height_py = calculate_centre_lane_mid_height_px_right(right_lane_window_coord_list, window_height, distance, left_lane)
         bottom_x_right = evaluate_polynomial(right_fit, y_eval)
         centre_lane_px: float = bottom_x_right - distance_to_lane
 
@@ -295,15 +296,15 @@ def calculate_steering_angle(left_lane_window_coord_list: List[Tuple[int, int]],
             elif reference_list[-3] == "r1" and reference_list[-2] == "r1" and reference_list[-1] == "l1":
                 right_lane = False
 
-        calculate_centre_lane_mid_height_px_left()
+        centre_lane_mid_height_px, centre_lane_mid_height_py = calculate_centre_lane_mid_height_px_left(left_lane_window_coord_list, window_height, distance, right_lane)
         bottom_x_left = evaluate_polynomial(left_fit, y_eval)
         centre_lane_px: float = bottom_x_left - distance_to_lane
 
     if centre_lane_px is None:
         return 0
 
-    car_position: float = calculate_car_position()
-    return calculate_theta_in_deg()
+    car_position: float = calculate_car_position(image_middle, centre_lane_px)
+    return calculate_theta_in_deg(centre_lane_mid_height_px, centre_lane_mid_height_py, car_position, y_eval)
 
 
 def pipeline():
