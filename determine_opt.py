@@ -306,7 +306,7 @@ def pipeline() -> None:
     total_processing_time: float = 0.0
 
     png_files: List[str] = [file for file in image_files if file.endswith('.png')]
-    image_paths_doubled: List[str] = png_files * 300
+    image_paths_doubled: List[str] = png_files
 
     random.shuffle(image_paths_doubled)
     num_images: int = len(image_paths_doubled)
@@ -314,6 +314,7 @@ def pipeline() -> None:
     for image_file in image_paths_doubled:
         image_path: str = os.path.join(image_directory, image_file)
         original_frame: np.ndarray = cv2.imread(image_path)
+        print(image_path)
 
         start_time: float = time.time()
         gray_image: np.ndarray = colortogreyImage(original_frame)
