@@ -1,27 +1,29 @@
 # Python zu C++ Übersetzung
-Dieses Projekt beinhaltet eine Übersetzung eines Python-Codes in C++. Der ursprüngliche Python-Code wurde optimiert und neu strukturiert, um die Lesbarkeit und Effizienz zu verbessern. In der Übersetzung wurden die fehlenden Funktionen, wie beispielsweise polyfit und polyval aus NumPy, durch eigene Funktionen ersetzt. Das Hauptaugenmerk dieser Übersetzung lag auf der Optimierung des Algorithmus und nicht auf der spezifischen Implementierung.
 
+## Motivation und Vorgehen
 
-## Übersetzung von Python nach C++
-1. Der Python-Code wurde in C++ übersetzt, um die Leistung und Geschwindigkeit der Anwendung zu verbessern. Die Funktionen und Algorithmen wurden entsprechend in C++ umgesetzt, wobei die erforderlichen Bibliotheken und Datentypen verwendet wurden.
+Die prototypische Python-basierte Ausgangssoftware wurde für eine leistungsfähigere Ausführung in die Programmiersprache C++ transformiert. Um den Übersetzungsprozess zu erleichtern, wurde der ursprüngliche Python-Code vorab optimiert und neu organisiert, was die Lesbarkeit erhöhte. In der folgenden Umsetzung wurden nicht vorhandene Funktionen, wie polyfit und polyval aus der Bibliothek NumPy, durch eigene Funktionen substituiert. Diese Überführung konzentrierte sich primär auf die Leistungssteigerung des Algorithmus, nicht auf die konkrete Umsetzung in C++.
 
-2. Eigenimplementation von numpy-Funktionen
-Die Python-Bibliothek NumPy wird in einigen Teilen des Codes verwendet, insbesondere die Funktionen polyfit und polyval. Da NumPy in C++ nicht verfügbar ist, wurden eigene Funktionen zur Polynomial-Fitting und -Auswertung implementiert. Die Funktion polyfit wurde implementiert, um Polynomkoeffizienten basierend auf gegebenen Punkten zu berechnen, während evaluate_polynomial ein Polynom mit gegebenen Koeffizienten und einem Wert für x auswertet.
+Der Fokus des Projekts lag auf der Leistungsoptimierung, um eine Verarbeitungsgeschwindigkeit von mindestens 15 fps zu erreichen, insbesondere da das Programm auf einem Raspberry Pi mit begrenzter Leistungsfähigkeit laufen soll.
 
 ## Optimierungen und Änderungen
-1. Erweiterter Einsatz von OpenCV- und Einbindung der Eigen-Bibliothek
+
+1. Eigenimplementation von numpy-Funktionen
+Die Python-Bibliothek NumPy wird in einigen Teilen des Codes verwendet, insbesondere die Funktionen polyfit und polyval. Da NumPy in C++ nicht verfügbar ist, wurden eigene Funktionen zur Polynomial-Fitting und -Auswertung implementiert. Die Funktion polyfit wurde implementiert, um Polynomkoeffizienten basierend auf gegebenen Punkten zu berechnen, während evaluate_polynomial ein Polynom mit gegebenen Koeffizienten und einem Wert für x auswertet.
+
+2. Erweiterter Einsatz von OpenCV- und Einbindung der Eigen-Bibliothek
 Obwohl OpenCV bereits im ursprünglichen Python-Code genutzt wurde, wurde die Verwendung dieser Bibliothek in der C++-Umsetzung erweitert und optimiert, um die Bildverarbeitung zu verbessern. Darüber hinaus wurde die Eigen-Bibliothek zur Optimierung von Matrixberechnungen in den C++-Code integriert. Diese Bibliotheken bieten effiziente Implementierungen von Bildverarbeitungsalgorithmen und linearen Algebraoperationen.
 
-2. Verwendung von Vektoren anstelle von Numpy-Arrays
+3. Verwendung von Vektoren anstelle von Numpy-Arrays
 In Python wurde die Bibliothek NumPy verwendet, um mit Arrays umzugehen. In C++ wurden stattdessen Vektoren verwendet, da sie eine ähnliche Funktionalität bieten und eine natürlichere Art der Speicherung von Daten darstellen.
 
-3. Effizientere Berechnungen und Verwendung von Eigen
+4. Effizientere Berechnungen und Verwendung von Eigen
 Um die Performance des Codes zu verbessern, wurden effizientere Berechnungsmethoden verwendet. Beispielsweise wurden Schleifen durch Matrixoperationen und Vektorisierung ersetzt, wo es möglich war. Die Eigen-Bibliothek wurde verwendet, um lineare Gleichungssysteme zu lösen und Berechnungen mit Matrizen und Vektoren durchzuführen.
 
-4. Strukturierung des Codes
+5. Strukturierung des Codes
 Der Code wurde in kleinere Funktionen unterteilt, um eine bessere Lesbarkeit und Wiederverwendbarkeit zu gewährleisten. Jede Funktion erfüllt eine spezifische Aufgabe, was die Wartung und Fehlerbehebung erleichtert.
 
-5. Verwendung von std::pair anstelle von Tuples
+6. Verwendung von std::pair anstelle von Tuples
 In Python wurden Tuples verwendet, um Paare von Werten zu speichern. In C++ wurden std::pair verwendet, um die gleiche Funktionalität zu erreichen. Dies verbessert die Lesbarkeit des Codes und erleichtert die Verwendung der Werte.
 
 
