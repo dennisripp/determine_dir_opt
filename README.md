@@ -62,8 +62,8 @@ Durch das Lösen dieser Hürden und die entsprechenden Anpassungen konnte der Py
 
   <table>
     <tr>
-      <td> <img src="./media/speedtest_oldpython.png" alt="Model Top" height="400"> </td>
-      <td> <img src="./media/speedtest_newcplusplus.png" alt="Model Bottom" height="400"> </td>
+      <td> <img src="./media/speedtest_oldpython.png" alt="Model Top" width="400"> </td>
+      <td> <img src="./media/speedtest_newcplusplus.png" alt="Model Bottom" width="400"> </td>
     </tr>
   </table>
 
