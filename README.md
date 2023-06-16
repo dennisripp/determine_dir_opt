@@ -9,8 +9,8 @@ Dieses Projekt beinhaltet eine Übersetzung eines Python-Codes in C++. Der urspr
 Die Python-Bibliothek NumPy wird in einigen Teilen des Codes verwendet, insbesondere die Funktionen polyfit und polyval. Da NumPy in C++ nicht verfügbar ist, wurden eigene Funktionen zur Polynomial-Fitting und -Auswertung implementiert. Die Funktion polyfit wurde implementiert, um Polynomkoeffizienten basierend auf gegebenen Punkten zu berechnen, während evaluate_polynomial ein Polynom mit gegebenen Koeffizienten und einem Wert für x auswertet.
 
 ## Optimierungen und Änderungen
-1. Verwendung von OpenCV- und Eigen-Bibliotheken
-Um die Bildverarbeitung und Matrixberechnungen zu optimieren, wurden die OpenCV- und Eigen-Bibliotheken in den C++-Code integriert. Diese Bibliotheken bieten effiziente Implementierungen von Bildverarbeitungsalgorithmen und linearen Algebraoperationen.
+1. Erweiterter Einsatz von OpenCV- und Einbindung der Eigen-Bibliothek
+Obwohl OpenCV bereits im ursprünglichen Python-Code genutzt wurde, wurde die Verwendung dieser Bibliothek in der C++-Umsetzung erweitert und optimiert, um die Bildverarbeitung zu verbessern. Darüber hinaus wurde die Eigen-Bibliothek zur Optimierung von Matrixberechnungen in den C++-Code integriert. Diese Bibliotheken bieten effiziente Implementierungen von Bildverarbeitungsalgorithmen und linearen Algebraoperationen.
 
 2. Verwendung von Vektoren anstelle von Numpy-Arrays
 In Python wurde die Bibliothek NumPy verwendet, um mit Arrays umzugehen. In C++ wurden stattdessen Vektoren verwendet, da sie eine ähnliche Funktionalität bieten und eine natürlichere Art der Speicherung von Daten darstellen.
@@ -44,9 +44,23 @@ Python bietet eine einfache Syntax für Array- und Matrixmanipulationen, z.B. be
 Lösung: Um die Array- und Matrixmanipulationen durchzuführen, wurden die Funktionen der OpenCV-Bibliothek verwendet, die Funktionen zum Schneiden, Reduzieren und Durchführen anderer Operationen auf Matrizen bereitstellt.
 
 ### 4. Konvertierung von Python-Funktionen in C++-Funktionen
-Die Optimierung des Codes erforderte die Konvertierung von Python-Funktionen in äquivalente C++-Funktionen. Dies erforderte ein genaues Verständnis der Funktionsweise der ursprünglichen Python-Funktionen und deren Umsetzung in C++.
+Ein integraler Teil der Codeoptimierung in diesem Projekt war die Transformation von Python-Funktionen in ihre C++-Äquivalente. Dieser Prozess erforderte ein detailliertes Verständnis der Funktionsweise der ursprünglichen Python-Funktionen und ihrer entsprechenden Implementierung in C++.
 
-Lösung: Die Funktionen wurden schrittweise analysiert und in C++ übersetzt. Dabei wurden ähnliche mathematische Berechnungen und Algorithmen verwendet, um das gewünschte Ergebnis zu erzielen. Bei Bedarf wurden auch spezifische C++-Bibliotheken und Funktionen verwendet, um die gewünschte Funktionalität zu erreichen.
+Eine Herausforderung in diesem Kontext stellte die Adaption spezifischer Datentypen dar, die von bestimmten Funktionen benötigt wurden. Zum Beispiel war in der Funktion cv2.GaussianBlur aus der Python-Bibliothek OpenCV eine direkte Übergabe der Kernelgröße möglich, während in der entsprechenden C++-Funktion GaussianBlur ein Size-Objekt erforderlich war.
+
+```python
+blurred = cv2.GaussianBlur(img, (5, 5), 0)
+```
+
+vs.
+
+```cpp
+GaussianBlur(img, blurred, Size(5, 5), 0, 0);
+```
+
+Diese notwendige Anpassung der Datentypen stellte eine zusätzliche Komplexitätsschicht dar, die bei der Konvertierung der rund 500 Zeilen Python-Code in C++ berücksichtigt werden musste. Trotz der syntaktischen Ähnlichkeiten zwischen Python und C++, waren es diese scheinbar kleinen, aber dennoch bedeutsamen Unterschiede, die einen Großteil des Aufwands im Konvertierungsprozess ausmachten. Jede Funktion musste individuell betrachtet und angepasst werden, um sicherzustellen, dass die funktionalen Anforderungen beider Sprachen erfüllt wurden.
+
+Lösung: Die Funktionen wurden schrittweise analysiert und in C++ übersetzt. Außerdem wurden ähnliche mathematische Berechnungen und Algorithmen verwendet, um das gewünschte Ergebnis zu erzielen. Bei Bedarf wurden auch spezifische C++-Bibliotheken und Funktionen verwendet, um die gewünschte Funktionalität zu erreichen.
 
 ### 5. Übertragung von Variablen und Datenstrukturen
 Die Übertragung von Variablen und Datenstrukturen von Python nach C++ erforderte eine sorgfältige Handhabung der Typen und Speicherstrukturen. Insbesondere die Konvertierung von Python-Listen und -Tupeln in C++-Vektoren und -Paare erforderte eine angemessene Behandlung.
@@ -58,7 +72,9 @@ Die Integration der OpenCV- und Eigen-Bibliotheken in das C++-Projekt erforderte
 
 Lösung: Die erforderlichen Header-Dateien und Bibliotheken wurden in den Build-Prozess integriert und entsprechend konfiguriert, um sicherzustellen, dass sie im Code korrekt verwendet werden können. Die CMake-Dateien oder das Build-System des Projekts wurden entsprechend aktualisiert, um die erforderlichen Abhängigkeiten und Verlinkungen zu berücksichtigen.
 
-Durch das Lösen dieser Hürden und die entsprechenden Anpassungen konnte der Python-Code erfolgreich in C++ übersetzt und optimiert werden. Die resultierende C++-Implementierung bietet eine verbesserte Leistung und Geschwindigkeit im Vergleich zur ursprünglichen Python-Version.
+## Fazit
+
+Durch das Lösen dieser Hürden und die entsprechenden Anpassungen konnte der Python-Code erfolgreich in C++ übersetzt und optimiert werden. Die resultierende C++-Implementierung bietet eine deutlich erhöhte Verarbeitungsgeschwindigkeit im Vergleich zur ursprünglichen Python-Version.
 
   <table>
     <tr>
